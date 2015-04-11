@@ -18,14 +18,36 @@
  * Author: Matthew Denninghoff
  * Date: 4/11/2015
  * 
+ * The MIT License
+ *
+ * Copyright 2015 matt.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
 // Connect to the database server using credentials or halt with an error
 // message to the browser.
-// Arguments: "hostname:tcpport", "username", "password".
-$msdatalink = mysql_connect ("mysql.cs.uky.edu", "", "");
+// Arguments: "hostname", "username", "password", "database", "port".
 
-if ( ! $msdatalink) die ( "Couldn't connect to database" );
+// Commented out deprecated connect function.
+//$msdatalink = mysql_connect ("mysql.cs.uky.edu", "", "");
 
-// Select the database to use, or halt with an error message to the browser.
-if( ! mysql_select_db( "" ))
-  die ( "Couldn't connect to database: ".mysql_error() );
+$mysqli = new mysqli('mysql.cs.uky.edu', '', '', '', 3306);
+
+if ( ! $mysqli) die ( "Could not connect to database" );
