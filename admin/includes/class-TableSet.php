@@ -38,7 +38,15 @@ const CSV_DELIMITER = ',';
 const CSV_ENCLOSURE = '"';
 
 class TableSet
-{    
+{
+    static protected $css_table;
+    static protected $css_caption = null;
+    static protected $css_th;
+    static protected $css_td;
+    static protected $css_td_int;
+    static protected $css_td_str;
+    static protected $css_td_real;
+    
     /**
      * Number of rows in a good result or 0.
      *
@@ -100,14 +108,6 @@ class TableSet
      */
     protected $show_row_numbers;
     
-    protected $css_table;
-    protected $css_caption;
-    protected $css_th;
-    protected $css_td;
-    protected $css_td_int;
-    protected $css_td_str;
-    protected $css_td_real;
-//    protected $css_misc;
     
     public $csv_filename;
     
@@ -120,8 +120,10 @@ class TableSet
     
     const COLUMN_DEFAULT_TYPE = TableSet::TYPE_STRING;
     
+    const CSS_TABLE_CLASS = 'tableset';
+    
     // CSS Selector string for: table tag of class tableset.
-    const CSS_SEL_CLASSTABLESET = 'table.tableset';
+//    const CSS_SEL_CLASSTABLESET = 'table.tableset';
     
     /**
      * Class constructor. The query is executed in this function.
@@ -147,8 +149,6 @@ class TableSet
         
         // Default filename to send to browser upon download.
         $this->csv_filename = 'results.csv';
-        
-        $this->set_default_css();
     }
     // end __construct().
     
@@ -156,38 +156,38 @@ class TableSet
      * Setup an array that holds CSS data.
      * 
      */
-    public function set_default_css()
+    static public function set_default_css()
     {
-        $this->css_table = array();
-        $this->css_caption = array();
-        $this->css_td = array();
-        $this->css_th = array();
+        TableSet::$css_table = array();
+        TableSet::$css_caption = array();
+        TableSet::$css_td = array();
+        TableSet::$css_th = array();
                 
-        $this->css_table['font-family'] = 'courier new, courier,monospace';
-        $this->css_table['font-size'] = '12pt';
-        $this->css_table['border-spacing'] = '0px';
-        $this->css_table['border-left'] = 'solid 1px #777';
-        $this->css_table['border-bottom'] = 'solid 1px #777';
+        TableSet::$css_table['font-family'] = 'courier new, courier,monospace';
+        TableSet::$css_table['font-size'] = '12pt';
+        TableSet::$css_table['border-spacing'] = '0px';
+        TableSet::$css_table['border-left'] = 'solid 1px #777';
+        TableSet::$css_table['border-bottom'] = 'solid 1px #777';
         
-        $this->css_th['font-family'] = 'arial';
-        $this->css_th['background-color'] = '#333';
+        TableSet::$css_th['font-family'] = 'arial';
+        TableSet::$css_th['background-color'] = 'firebrick';
         
-        $this->css_th['padding'] = '0px 10px;';
-        $this->css_th['border-style'] = 'solid';
-        $this->css_th['border-width'] = '1px 1px 0px 0px';
-        $this->css_th['border-color'] = '#777';
+        TableSet::$css_th['padding'] = '0px 10px;';
+        TableSet::$css_th['border-style'] = 'solid';
+        TableSet::$css_th['border-width'] = '1px 1px 0px 0px';
+        TableSet::$css_th['border-color'] = '#777';
         
-        $this->css_caption['font-family'] = 'arial';
-        $this->css_caption['background-color'] = '#333';
+        TableSet::$css_caption['font-family'] = 'arial';
+        TableSet::$css_caption['background-color'] = '#333';
         
-        $this->css_td['padding'] = '0px 10px;';
-        $this->css_td['border-style'] = 'solid';
-        $this->css_td['border-width'] = '1px 1px 0px 0px';
-        $this->css_td['border-color'] = '#777';
+        TableSet::$css_td['padding'] = '0px 10px;';
+        TableSet::$css_td['border-style'] = 'solid';
+        TableSet::$css_td['border-width'] = '1px 1px 0px 0px';
+        TableSet::$css_td['border-color'] = '#777';
         
-        $this->css_td_int = array('text-align' => 'right');
-        $this->css_td_real = array('text-align' => 'right');
-        $this->css_td_str = null;
+        TableSet::$css_td_int = array('text-align' => 'right');
+        TableSet::$css_td_real = array('text-align' => 'right');
+        TableSet::$css_td_str = null;
         
 //        $this->css[self::CSS_SEL_CLASSTABLESET.' p.rightDim'] = 'color:#aaa; margin:6px 10px 30px; text-align: right; width:69%;';
     } 
@@ -200,40 +200,40 @@ class TableSet
      * @param string $key
      * @param string $val
      */
-    public function set_css_table_value( $key, $val)
+    static public function set_css_table_value( $key, $val)
     {
         $this->css_table[$key] = $val;
     }
     // end set_css_table_value().
     
-    public function set_css_td_value( $key, $val)
+    static public function set_css_td_value( $key, $val)
     {
         $this->css_td[$key] = $val;
     }
     
-    public function set_css_th_value( $key, $val)
+    static public function set_css_th_value( $key, $val)
     {
         $this->css_th[$key] = $val;
     }
     
-    public function set_css_tdint_value( $key, $val)
+    static public function set_css_tdint_value( $key, $val)
     {
         $this->css_td_int[$key] = $val;
     }
     
-    public function set_css_tdreal_value( $key, $val)
+    static public function set_css_tdreal_value( $key, $val)
     {
         $this->css_td_real[$key] = $val;
     }
     
-    public function set_css_tdstr_value( $key, $val)
+    static public function set_css_tdstr_value( $key, $val)
     {
         $this->css_td_str[$key] = $val;
     }
     
-    public function set_css_caption_value( $key, $val)
+    static public function set_css_caption_value( $key, $val)
     {
-        $this->css_caption[$key] = $val;
+        TableSet::$css_caption[$key] = $val;
     }
     
     /**
@@ -241,15 +241,15 @@ class TableSet
      * This output should be surrounded with the style tag.
      * 
      */
-    public function print_css()
+    static public function print_css()
     {
-        echo '/* Start TableSet css. */';
+        echo "/* Start TableSet css. */\n";
         
         // Print the main table style.
-        if( count($this->css_table) > 0 )
+        if( count(TableSet::$css_table) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . '{';
-            foreach($this->css_table as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . '{';
+            foreach(TableSet::$css_table as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
@@ -257,10 +257,10 @@ class TableSet
         }
         
         // Print the style for TH.
-        if( count($this->css_th) > 0 )
+        if( count(TableSet::$css_th) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . ' th {';
-            foreach($this->css_th as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . ' th {';
+            foreach(TableSet::$css_th as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
@@ -268,10 +268,10 @@ class TableSet
         }
         
         // Print the style for TD.
-        if( count($this->css_td) > 0 )
+        if( count(TableSet::$css_td) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . ' td {';
-            foreach($this->css_td as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . ' td {';
+            foreach(TableSet::$css_td as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
@@ -280,10 +280,10 @@ class TableSet
         
         
         // Print the style for caption.
-        if( count($this->css_caption) > 0 )
+        if( count(TableSet::$css_caption) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . ' caption {';
-            foreach($this->css_caption as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . ' caption {';
+            foreach(TableSet::$css_caption as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
@@ -292,10 +292,10 @@ class TableSet
         
         
         // Print the style for td.int .
-        if( count($this->css_td_int) > 0 )
+        if( count(TableSet::$css_td_int) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . ' td.'.self::TYPE_INT.' {';
-            foreach($this->css_td_int as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . ' td.'.self::TYPE_INT.' {';
+            foreach(TableSet::$css_td_int as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
@@ -303,10 +303,10 @@ class TableSet
         }
         
         // Print the style for td.real .
-        if( count($this->css_td_real) > 0 )
+        if( count(TableSet::$css_td_real) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . ' td.'.self::TYPE_REAL.' {';
-            foreach($this->css_td_real as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . ' td.'.self::TYPE_REAL.' {';
+            foreach(TableSet::$css_td_real as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
@@ -314,17 +314,17 @@ class TableSet
         }
         
         // Print the style for td.str .
-        if( count($this->css_td_str) > 0 )
+        if( count(TableSet::$css_td_str) > 0 )
         {
-            echo self::CSS_SEL_CLASSTABLESET . ' td.'.self::TYPE_STRING.' {';
-            foreach($this->css_td_str as $key => $val )
+            echo 'table.'.self::CSS_TABLE_CLASS . ' td.'.self::TYPE_STRING.' {';
+            foreach(TableSet::$css_td_str as $key => $val )
             {
                 echo $key . ':' . $val . ';';
             }
             echo "}\n";
         }
         
-        echo '/* end TableSet css. */';
+        echo "/* end TableSet css. */\n";
     }
     // end print_css().
 
@@ -439,7 +439,7 @@ class TableSet
      */
     public function print_table_html()
     {
-        echo '<table class="resultSet">'."\n"
+        echo '<table class="'.self::CSS_TABLE_CLASS.'">'."\n"
         . ($this->caption ? ' <caption>'.$this->caption.'</caption>' . "\n" : '')
         . " <thead><tr>\n";
 
@@ -517,6 +517,19 @@ class TableSet
         return true;
     }
     // end set_column_name().
+    
+    public function set_column_names($arr)
+    {
+        if( !is_array($arr))
+            return false;
+        
+        if( count($arr) != $this->num_cols)
+            return false;
+        
+        $this->column_names = $arr;
+        
+        return true;
+    }
     
     /**
      * Sets a column type. Returns false if the column number was out of bounds.
@@ -693,20 +706,6 @@ class TableSet
         return $this->column_names[$colNo];
     }
     
-    /**
-     * Set the column name for a given column number.
-     * Does nothing if the column does not exist.
-     * 
-     * @param int $colNo
-     * @param string $name
-     */
-    public function set_col_name($colNo, $name)
-    {
-        if( $this->column_exists($colNo))
-        {
-            $this->column_names[$colNo] = $name;
-        }
-    }
 
     public function replace_headers_by_map($map, $startCol, $colPrefix)
     {
