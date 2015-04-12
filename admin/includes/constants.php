@@ -33,10 +33,12 @@ define('STORE_NAME', 'Happy\'s Fun time Game and Toy Store');
 define('STORE_LOGO_IMG', 'logo.jpg');
 
 define('SITE_BASE_URL', 'http://localhost/cs405/');
+define('SITE_BASE_URL_ADMIN', 'http://localhost/cs405/admin/');
 
 define('DIR_IMAGES', 'images/');
 define('DIR_IMAGES_PRODUCTS', 'images/products/');
 
+define('FILE_INDEX', 'index.php');
 define('FILE_LOGIN', 'login.php');
 define('FILE_ITEMS', 'items.php');
 define('FILE_ORDERS', 'orders.php');
@@ -49,3 +51,5 @@ define('MYSQLI_BIND_TYPE_STRING', 's');
 define('MYSQLI_BIND_TYPE_BLOB',   'b');
 
 define('TIMEZONE_DEFAULT', 'America/New_York');
+
+define('CRYPT_SALT', 'm1RMaNe!');
