@@ -38,6 +38,8 @@ require('./includes/database.php');
 require('./includes/class-dbentity.php');
 require('./includes/class-staff.php');
 
+include './includes/class-TableSet.php';
+
 // (Certain installations of PHP print warnings if default timezone is not set.)
 date_default_timezone_set(TIMEZONE_DEFAULT);
 
@@ -78,6 +80,9 @@ if( $staff->getKeyValue() === null )
 // Make a page header to be shown in all admin pages. Includes the navigation
 // box.
 //
+
+TableSet::set_default_css();
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -105,8 +110,11 @@ if( $staff->getKeyValue() === null )
      }
      #mainContent { position: absolute;
      top: 120px;
-     left: 0px;
+     left: 150px;
      }
+     
+     <?php TableSet::print_css(); ?>
+     
     </style>
     <script type="text/javascript"></script>
  </head>
