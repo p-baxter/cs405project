@@ -35,7 +35,7 @@
  */
 function http_redirect($page = '')
 {
-    header('Location: '.SITE_BASE_URL.$page);
+    header('Location: '.SITE_BASE_URL_ADMIN.$page);
     exit;
 }
 // end http_redirect().
@@ -62,7 +62,7 @@ function href_link($page, $arguments = null )
         $args = '?'. substr($args, 1);
     }
     
-    return SITE_BASE_URL . $page . $args;
+    return SITE_BASE_URL_ADMIN . $page . $args;
 }
 // end href_link().
 
@@ -89,3 +89,24 @@ function logout_user()
     session_destroy();
 }
 // end logout_user().
+
+// Password_verify only exists as of php >= 5.5
+// UK Multilab has php 5.3.10.
+if( !function_exists('password_verify'))
+{
+    function password_verify($password, $hash )
+    {
+        return $hash == crypt($password, CRYPT_SALT);
+    }
+}
+
+// password_hash only exists as of php >= 5.5
+// UK Multilab has php 5.3.10.
+if( !function_exists('password_hash'))
+{
+    // Mirror the PHP builtin password_hash function, and ignore the options.
+    function password_hash($password, $algo = 0, $options = array() )
+    {
+        return crypt($password, CRYPT_SALT);
+    }
+}
