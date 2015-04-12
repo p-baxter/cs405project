@@ -49,8 +49,9 @@ session_start();
 
 // Redirect if session ID is not registered.
 // Note: the script stops running upon running http_redirect().
-if( ! session_is_registered(SESSION_ID_KEY) )
+if( ! isset($_SESSION[SESSION_ID_KEY]) )
 {
+    die('aaaaa'.print_r($_SESSION,true));
     http_redirect(FILE_LOGIN);
 }
 
@@ -65,6 +66,7 @@ if( ! $staff->init_by_sessionId($_SESSION[SESSION_ID_KEY]) )
 // redirect the user to the login page.
 if( $staff->getKeyValue() === null )
 {
+//    die('bbb/'.print_r($_SESSION,true));
     unset($_SESSION[SESSION_ID_KEY]);
     http_redirect(FILE_LOGIN);
 }
@@ -101,13 +103,17 @@ if( $staff->getKeyValue() === null )
          width: 250px;
          height: 500px;
      }
+     #mainContent { position: absolute;
+     top: 120px;
+     left: 0px;
+     }
     </style>
     <script type="text/javascript"></script>
  </head>
  <body>
   <div id="header">
    <img class="logo" width="100px" height="100px" src="<?php echo STORE_LOGO_IMG; ?>" />
-   <h1><?php echo STORE_NAME; ?></h1>
+   <?php echo STORE_NAME; ?>
   </div>
   <div id="navBox">
    <div class="boxlabel">Links</div>
@@ -116,7 +122,7 @@ if( $staff->getKeyValue() === null )
     <li><a href="<?php echo href_link(FILE_ITEMS); ?>">Items</a></li>
     <li><a href="<?php echo href_link(FILE_SPECIALS); ?>">Specials</a></li>
     <li><a href="<?php echo href_link(FILE_REPORTS); ?>">Reports</a></li>
-    <li><a href="<?php echo href_link(FILE_LOGIN, array('action','logout') ); ?>">Log Out</a></li>
+    <li><a href="<?php echo href_link(FILE_LOGIN, array('action' => 'logout') ); ?>">Log Out</a></li>
    </ul>
   </div>
   <div id="mainContent">
