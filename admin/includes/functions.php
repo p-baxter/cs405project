@@ -90,58 +90,6 @@ function logout_user()
 }
 // end logout_user().
 
-/**
- * Print a html select tag with the given values. 
- * 
- * @param string $name
- * @param array $values
- * @param string $label
- * @param mixed $selected
- * Pass a string to select a single value.
- * Pass an array to select multiple.
- * 
- * @param boolean $multiple
- * Set to true to allow multiple selections.
- * Defaults to false.
- * 
- * @param int $size
- * Number of visible options. Cannot be larger than count($values).
- * Defaults to 1.
- * 
- * @return string
- */
-function print_select( $name, $values, $label, $selected = '', $multiple = false, $size = 1 )
-{
-    if( !is_array($values))
-        return '';
-    
-    echo '<label>'.$label.' <select name="'.$name.'"'
-            . ($multiple ? ' multiple' : '');
-    
-    if( $size > count($values) )
-        $size = count($values);
-    
-    echo ' size="'. (int)$size . '">';
-    
-    foreach( $values as $key => $val )
-    {
-        $sel = '';
-        if($multiple && is_array($selected) && in_array($val, $selected))
-        {
-            $sel = ' selected';
-        }
-        elseif( $val == $selected)
-        {
-            $sel = ' selected';
-        }
-        echo '  <option value="'.$key.'"'.$sel.'>'.$val."</option>\n";
-    }
-    // done iterating over values.
-    
-    echo "</select></label>\n";
-}
-// end print_select().
-
 // Password_verify only exists as of php >= 5.5
 // UK Multilab has php 5.3.10.
 if( !function_exists('password_verify'))
