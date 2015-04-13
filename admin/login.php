@@ -40,14 +40,14 @@ session_start();
 // Detect if the user is already logged in.
 // If so, then redirect them to the index.
 //
-if(isset($_SESSION[SESSION_ID_KEY]))
-{
-    $staff = new Staff();
-    if( $staff->init_by_sessionId($_SESSION[SESSION_ID_KEY]) )
-    {
+//if(isset($_SESSION[SESSION_ID_KEY]))
+//{
+//    $staff = new Staff();
+//    if( $staff->init_by_sessionId($_SESSION[SESSION_ID_KEY]) )
+//    {
 //        http_redirect(FILE_INDEX);
-    }
-}
+//    }
+//}
 // done redirecting already logged-in user.
 
 $errors = array();
@@ -78,14 +78,6 @@ if( isset($_GET['action']))
                 $errors[] = 'Staff ID not found';
                 break;
             }
-
-//            if( $staff->getKeyValue() == null)
-//            {
-//                $errors[] = 'Staff ID not found';
-//                break;
-//            }
-            
-//            die(password_hash($_POST['pass']));
             
             if( ! password_verify($_POST['pass'], $staff->password))
             {
@@ -102,10 +94,14 @@ if( isset($_GET['action']))
                 break;
             }
             
-//            die(print_r($_SESSION,true));
+            // The credentials were good, so redirect them.
+            if( isset($_POST['page']) && file_exists($_POST['page']))
+            {
+                http_redirect($_POST['page']);
+            }
+
+            http_redirect(FILENAME_INDEX);
             
-            // The credentials were good, so send them to the index page.
-            http_redirect(FILE_INDEX);
             
             break;
         
@@ -117,6 +113,9 @@ if( isset($_GET['action']))
 }
 // end if( isset($_GET['action'])).
 
+include './header.php';
+
+/*
 ?>
 <!DOCTYPE html>
 <html>
@@ -127,17 +126,22 @@ if( isset($_GET['action']))
     <style type="text/css">
      body{
          margin: 10px;
+         background: none repeat scroll 0 0 white;
      }
      #header {
-         position: absolute;
-         top:0px;
-         left: 0px;
-         width: 100%;
-         height: 100px;
+
      } 
-     #mainContent { position: absolute;
-     top: 120px;
-     left: 0px;
+     #mainContent {
+         margin-top: 20px;
+     }
+     #mainContent form {
+         background: none repeat scroll 0 0 gray;
+         position: relative;
+         left: 40%;
+         text-align: right;
+         top: 100px;
+         width: 230px;
+         
      }
     </style>
  </head>
@@ -148,6 +152,7 @@ if( isset($_GET['action']))
   </div>
   <div id="mainContent">
 <?php
+*/
 
 if( isset($_GET['action']) && $_GET['action'] == 'logout')
 {
@@ -165,11 +170,15 @@ if( count($errors) > 0 )
     
     echo '</pre>';
 }
+// done printing errors.
+
+$page = isset($_GET['page']) ? '<input type="hidden" name="page" value="'.$_GET['page'].'" />' :'';
 
 ?>
    <form action="login.php?action=login" method="POST">
    Staff ID <input type="text" name="staffId" value="<?php echo isset($_POST['staffId']) ? $_POST['staffId'] : ''; ?>" /><br/>
    Password <input type="password" name="pass" value="" /><br/>
+   <?php echo $page; ?>
    <input type="submit" value="Submit" />
    </form>
    
