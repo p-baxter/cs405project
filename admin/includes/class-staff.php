@@ -159,7 +159,7 @@ class Staff extends DBEntity
     {
         $retval = false;
         
-        $stmt = $this->mysqli->prepare("INSERT (name, isManager, password, sessionId) "
+        $stmt = $this->mysqli->prepare("INSERT INTO ".$this->tableName." (name, isManager, password, sessionId) "
             . "VALUES (?,?,?,?)");
 
         if($stmt)
