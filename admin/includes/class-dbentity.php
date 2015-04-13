@@ -2,6 +2,9 @@
 /* 
  * File: class-dbentity.php
  * 
+ * Superclass for database entity classes.
+ * A variable named $mysqli must contain a database connection.
+ * 
  * The MIT License
  *
  * Copyright 2015 matt.
@@ -27,6 +30,9 @@
 
 abstract class DBEntity
 {
+    const RESULT_ASSOC_ARRAY = 0;
+    const RESULT_OBJECTS = 1;
+    
     /**
      * The mysqli connection object.
      *
@@ -56,11 +62,11 @@ abstract class DBEntity
     protected $keyValue;
     
     /**
-     * Array of column names.
+     * Array of column names. Do not include the key column.
      *
      * @var array 
      */
-    protected $columnNames;
+//    protected $columnNames;
     
     
     /**
@@ -69,7 +75,7 @@ abstract class DBEntity
      *
      * @var array
      */
-    protected $columnBindTypes;
+//    protected $columnBindTypes;
     
     /**
      * Find a 
@@ -79,15 +85,25 @@ abstract class DBEntity
     public abstract function db_update();
     public abstract function db_insert();
     
+
+    
     /**
      * 
+     * @param int $id Use to set this keyValue in the constructor.
      * @global mysqli $mysqli
      */
-    public function __construct()
+    public function __construct($id = null)
     {
         global $mysqli;
         $this->mysqli = $mysqli;
-        $this->keyValue = null;
+        if( $id != null )
+        {
+            $this->keyValue = $id;
+        }
+        else
+        {
+            $this->keyValue = null;
+        }
     }
     // end constructor.
     
@@ -102,5 +118,75 @@ abstract class DBEntity
         return $this->keyValue;
     }
     // end getKeyValue().
+    
+    /**
+     * 
+     * @param mysqli $mysqli
+     */
+    public function setDatabase($mysqli)
+    {
+        if(is_a($mysqli, 'mysql'))
+            $this->mysqli = $mysqli;
+    }
+    
+    /**
+     * Set the key value. 
+     * 
+     * @param int $val
+     */
+//    public function setKeyValue($val)
+//    {
+//        $this->keyValue = $val;
+//    }
+    
+    
+    /**
+     * Update a record matching this record's key with this class member's values.
+     * 
+     * @return boolean
+     */
+//    public function db_update()
+//    {
+//        $retval = false;
+//        
+//        if( $this->getKeyValue() != null )
+//        {
+//            $query = "UPDATE ". $this->tableName." SET ";
+//            
+//            $colstr = "";
+//            foreach( $this->columnNames as $col)
+//            {
+//                $colstr .= ",$col = ?";
+//            }
+//            // Remove the first comma.
+//            $colstr = substr($colstr, 1);
+//            
+//            $query .= $colstr;
+//            
+//            
+//            
+//            $stmt = $this->mysqli->prepare();
+//            
+//            
+////                . "SET name=?, isManager=?, password=?, ".self::COL_SESSIONID."=? "
+////                . "WHERE ".$this->keyName."=?");
+//
+//            if($stmt)
+//            {
+//                if( $stmt->bind_param("sissi", $this->name, $this->isManager,
+//                        $this->password, $this->sessionId, $this->keyValue))
+//                {
+//                    $retval = $stmt->execute();
+//                }
+//                $stmt->close();
+//            }
+//            // end if stmt good.
+//        }
+//        // end if not null.
+//        
+//        return $retval;
+//    }
+    // end update_db().
+    
 }
 // end class DBEntity
