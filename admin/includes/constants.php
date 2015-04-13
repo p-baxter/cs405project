@@ -38,12 +38,12 @@ define('SITE_BASE_URL_ADMIN', 'http://localhost/cs405/admin/');
 define('DIR_IMAGES', 'images/');
 define('DIR_IMAGES_PRODUCTS', 'images/products/');
 
-define('FILE_INDEX', 'index.php');
-define('FILE_LOGIN', 'login.php');
-define('FILE_ITEMS', 'items.php');
-define('FILE_ORDERS', 'orders.php');
-define('FILE_REPORTS', 'reports.php');
-define('FILE_SPECIALS', 'specials.php');
+define('FILENAME_INDEX', 'index.php');
+define('FILENAME_LOGIN', 'login.php');
+define('FILENAME_ITEMS', 'items.php');
+define('FILENAME_ORDERS', 'orders.php');
+define('FILENAME_REPORTS', 'reports.php');
+define('FILENAME_SPECIALS', 'specials.php');
 
 define('MYSQLI_BIND_TYPE_INT',    'i');
 define('MYSQLI_BIND_TYPE_DOUBLE', 'd');
