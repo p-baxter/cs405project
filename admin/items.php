@@ -24,19 +24,39 @@
  * THE SOFTWARE.
  */
 
+const IDSTR = 'itemId';
+
+require './includes/application_top.php';
+require './includes/class-ItemType.php';
+require './includes/class-Item.php';
+
+// 
+
+
 require './header.php';
 
 //$mysqli = new mysqli();
 
-$stmt = $mysqli->prepare("SELECT itemId, enabled, itemType, qty_available, name, promoRate, price, imageName from Item ");
-        
+$editItem = false;
+if( isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET[IDSTR]))
+{
+    $editItem = true;
+}
+
+$stmt = $mysqli->prepare("SELECT itm.itemId, itm.enabled, typ.name,"
+        . " itm.qty_available, itm.name, itm.promoRate, itm.price "
+        . "FROM Item itm JOIN ItemType typ ON typ.itemTypeId = itm.itemType "
+        . ($editItem ? " WHERE itm.itemId = ".(int)$_GET[IDSTR] : "")
+        );
+
 $stmt->execute();
 
-$stmt->bind_result($itemid, $enab, $itype, $qty, $name, $promo, $price, $image );
+$stmt->bind_result($itemid, $enab, $itype, $qty, $name, $promo, $price );
 
 $data = array();
 
 $colnames = array();
+$coltypes = array();
 $result = $stmt->result_metadata();
 
 $flds = $result->fetch_fields();
@@ -46,11 +66,30 @@ $flds = $result->fetch_fields();
 foreach( $flds as $val )
 {
     $colnames[] = $val->name;
+    
+    // Detect the field type for CSS formatting.
+    $type = TableSet::TYPE_STRING;
+    switch( $val->type)
+    {
+        case MYSQLI_TYPE_BIT:
+        case MYSQLI_TYPE_LONG:
+            $type = TableSet::TYPE_INT;
+            break;
+        
+        case MYSQLI_TYPE_STRING:
+            $type = TableSet::TYPE_STRING;
+            break;
+        
+        case MYSQLI_TYPE_NEWDECIMAL:
+            $type = TableSet::TYPE_REAL;
+            break;
+    }
+    $coltypes[] = $type;
 }
 
 while( $stmt->fetch())
 {    
-    $col = array( $itemid, $enab, $itype, $qty, $name, $promo, $price, $image);
+    $col = array( $itemid, $enab, $itype, $qty, $name, $promo, $price );
     $data[] = $col;
 }
 
@@ -62,10 +101,70 @@ $stmt->close();
 $ts = new TableSet();
 $ts->set_data($data);
 
+$ts->show_row_numbers(false);
+$ts->replace_column_values(1, array(0 => 'no', 1 => 'yes'));
+
+
 //die( var_dump($ts->set_column_names($colnames)));
 $ts->set_column_names($colnames);
+$ts->set_column_name(2, 'Type');
+
+$ts->set_column_types($coltypes);
+$ts->set_column_type(1, TableSet::TYPE_STRING);
+
+$ts->add_column('Special Price');
+$ts->set_column_type(7, TableSet::TYPE_REAL);
+
+if( ! $editItem)
+    $ts->add_column('&nbsp;');
+
+// Compute the special price.
+// Add the links to edit.
+for($row=0,$n=$ts->get_num_rows(); $row < $n; $row++)
+{
+    $prom = $ts->get_value_at($row, 5);
+    $prc = $ts->get_value_at($row, 6);
+    
+    $ts->set_value_at($row, 7, $prom * $prc);
+    
+    if( ! $editItem)
+    {
+        $itemId = $ts->get_value_at($row, 0);
+        $href = '<a href="'.href_link(FILENAME_ITEMS, array('action' => 'edit', IDSTR => $itemId))
+                .'">edit</a>';
+        $ts->set_value_at($row, 8, $href);
+    }
+    // end $editItem.
+}
+// done iterating over rows.
 
 $ts->print_table_html();
+
+//
+// Print a form to edit an individual item.
+//
+if(  $editItem )
+{
+    echo '<form action="'.  href_link(FILENAME_ITEMS, array('action' => 'update')).'" method="POST">'."\n"
+            ."<fieldset>\n";
+    
+    $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
+    
+    $Item = new Item();
+    $Item->init_by_key($_GET[IDSTR]);
+    
+    print_select('itype', $itypes, 'Item Type', $_GET[IDSTR] );
+    
+//    $Item
+ // <label>Item Type:<input type="" /></label><br/>   
+    ?>
+ 
+   
+<?php 
+    echo '<br><input type="submit" value="Update" /> <a href="'.  href_link(FILENAME_ITEMS).'">Cancel</a>';
+    echo "</fieldset>\n</form>\n";
+}
+// done printing edit form.
 
 //echo '<pre>'. print_r($colnames,true).'</pre>';
 
