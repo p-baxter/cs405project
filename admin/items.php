@@ -29,9 +29,65 @@ const IDSTR = 'itemId';
 require './includes/application_top.php';
 require './includes/class-ItemType.php';
 require './includes/class-Item.php';
+require './includes/class-HtmlWrap.php';
 
-// 
 
+if( isset($_GET['action']) )
+{
+//    die( print_r($_POST,true) . print_r($_GET,true));
+    if( $_GET['action'] == 'update' && isset($_GET[IDSTR]) )
+    {
+            // @TODO: verify manager  type.
+
+        $Item = new Item();
+        $Item->init_by_key($_GET[IDSTR]);
+
+        // @TODO: if item not found, show error message and redirect.
+
+        if( ! isset($_POST['enabled'])) 
+            $Item->enabled = false;
+        else
+            $Item->enabled = true;
+
+        $Item->itemType = $_POST['itype'];
+        $Item->qty_available = $_POST['qty'];
+        $Item->name = $_POST['name'];
+        $Item->promoRate = $_POST['promo'];
+        $Item->price = $_POST['price'];
+        $Item->imageName = $_POST['image'];
+
+        $Item->db_update();
+
+        // @TODO: show any errors.
+
+        // Redirct back to items.php.
+        http_redirect(FILENAME_ITEMS);
+    }
+    else if( $_GET['action'] == 'insert' )
+    {
+        $Item = new Item();
+
+        if( ! isset($_POST['enabled'])) 
+            $Item->enabled = false;
+        else
+            $Item->enabled = true;
+
+        $Item->itemType = $_POST['itype'];
+        $Item->qty_available = $_POST['qty'];
+        $Item->name = $_POST['name'];
+        $Item->promoRate = $_POST['promo'];
+        $Item->price = $_POST['price'];
+        $Item->imageName = $_POST['image'];
+
+//        var_dump($Item->db_insert());
+
+        // @TODO: show any errors.
+
+        // Redirct back to items.php.
+        http_redirect(FILENAME_ITEMS);
+        exit;
+    }
+}
 
 require './header.php';
 
@@ -47,6 +103,7 @@ $stmt = $mysqli->prepare("SELECT itm.itemId, itm.enabled, typ.name,"
         . " itm.qty_available, itm.name, itm.promoRate, itm.price "
         . "FROM Item itm JOIN ItemType typ ON typ.itemTypeId = itm.itemType "
         . ($editItem ? " WHERE itm.itemId = ".(int)$_GET[IDSTR] : "")
+        . " ORDER BY itm.itemId"
         );
 
 $stmt->execute();
@@ -140,27 +197,84 @@ for($row=0,$n=$ts->get_num_rows(); $row < $n; $row++)
 
 $ts->print_table_html();
 
+if( ! $editItem )
+    echo '<a href="'.  href_link(FILENAME_ITEMS, array('action'=>'create')).'">Insert</a><br/>'."\n";
+
+if( isset($_GET['action']) && $_GET['action']=='create')
+{
+    // @TODO: combine insert and edit code.
+    $HW = new HTMLWrap();
+    
+    echo '<form action="'.  href_link(FILENAME_ITEMS, array('action' => 'insert' )).'" method="POST">'."\n"
+            ."<fieldset>\n";
+    
+    $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
+    
+    $Item = new Item();
+//    $Item->init_by_key($_GET[IDSTR]);
+        
+    $HW->print_checkbox('enabled', 1, 'Enabled', $Item->enabled);
+    echo "<br/>";
+    
+    $HW->print_select('itype', $itypes, 'Item Type', $Item->itemType );
+    echo "<br/>";
+    
+    $HW->print_textbox('qty', $Item->qty_available, 'Qty Avail');
+    echo "<br/>";
+    
+    $HW->print_textbox('name', $Item->name, 'Name');
+    echo "<br/>";
+    
+    $HW->print_textbox('promo', $Item->promoRate, 'Promo Rate');
+    echo "<br/>";
+    
+    $HW->print_textbox('price', $Item->price, 'Price');
+    echo "<br/>";
+    
+    $HW->print_textbox('image', $Item->imageName, 'Image');
+    echo "<br/>";
+    
+    echo '<br><input type="submit" value="Insert" /> <a href="'.  href_link(FILENAME_ITEMS).'">Cancel</a>';
+    echo "</fieldset>\n</form>\n";
+}
+// done insert form.
+
 //
 // Print a form to edit an individual item.
 //
 if(  $editItem )
 {
-    echo '<form action="'.  href_link(FILENAME_ITEMS, array('action' => 'update')).'" method="POST">'."\n"
+    $HW = new HTMLWrap();
+    
+    echo '<form action="'.  href_link(FILENAME_ITEMS, array('action' => 'update', IDSTR => $_GET[IDSTR])).'" method="POST">'."\n"
             ."<fieldset>\n";
     
     $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
     
     $Item = new Item();
     $Item->init_by_key($_GET[IDSTR]);
+        
+    $HW->print_checkbox('enabled', 1, 'Enabled', $Item->enabled);
+    echo "<br/>";
     
-    print_select('itype', $itypes, 'Item Type', $_GET[IDSTR] );
+    $HW->print_select('itype', $itypes, 'Item Type', $Item->itemType );
+    echo "<br/>";
     
-//    $Item
- // <label>Item Type:<input type="" /></label><br/>   
-    ?>
- 
-   
-<?php 
+    $HW->print_textbox('qty', $Item->qty_available, 'Qty Avail');
+    echo "<br/>";
+    
+    $HW->print_textbox('name', $Item->name, 'Name');
+    echo "<br/>";
+    
+    $HW->print_textbox('promo', $Item->promoRate, 'Promo Rate');
+    echo "<br/>";
+    
+    $HW->print_textbox('price', $Item->price, 'Price');
+    echo "<br/>";
+    
+    $HW->print_textbox('image', $Item->imageName, 'Image');
+    echo "<br/>";
+
     echo '<br><input type="submit" value="Update" /> <a href="'.  href_link(FILENAME_ITEMS).'">Cancel</a>';
     echo "</fieldset>\n</form>\n";
 }
