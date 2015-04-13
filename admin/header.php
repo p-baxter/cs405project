@@ -2,11 +2,7 @@
 /* 
  * header.php
  * 
- * Include files that will be used with all admin pages.
- * database.php establishes a mysql connection or dies.
- * 
- * Verify that a user is logged in, or redirect them to the login page.
- * If the user is logged in, then show the page header.
+ * Print the HTML page header used in all admin pages.
  * 
  * The MIT License
  *
@@ -31,50 +27,7 @@
  * THE SOFTWARE.
  */
 
-require('./includes/constants.php');
-require('./includes/functions.php');
-require('./includes/database.php');
-
-require('./includes/class-dbentity.php');
-require('./includes/class-staff.php');
-
 include './includes/class-TableSet.php';
-
-// (Certain installations of PHP print warnings if default timezone is not set.)
-date_default_timezone_set(TIMEZONE_DEFAULT);
-
-session_start();
-
-//
-// Detect if the user is logged in.
-//
-
-// Redirect if session ID is not registered.
-// Note: the script stops running upon running http_redirect().
-if( ! isset($_SESSION[SESSION_ID_KEY]) )
-{
-    die('aaaaa'.print_r($_SESSION,true));
-    http_redirect(FILE_LOGIN);
-}
-
-$staff = new Staff();
-if( ! $staff->init_by_sessionId($_SESSION[SESSION_ID_KEY]) )
-{
-    echo $mysqli->error;
-    exit();
-}
-
-// If the query failed to find a value, then unset the $_SESSION value and
-// redirect the user to the login page.
-if( $staff->getKeyValue() === null )
-{
-//    die('bbb/'.print_r($_SESSION,true));
-    unset($_SESSION[SESSION_ID_KEY]);
-    http_redirect(FILE_LOGIN);
-}
-//
-// done verifying that user is logged in.
-//
 
 //
 // Make a page header to be shown in all admin pages. Includes the navigation
@@ -93,24 +46,25 @@ TableSet::set_default_css();
     <style type="text/css">
      body{
          margin: 10px;
+         background: none repeat scroll 0 0 #ccc;
      }
      #header {
-         position: absolute;
+/*         position: absolute;
          top:0px;
          left: 0px;
          width: 100%;
-         height: 100px;
+         height: 100px;*/
      } 
      #navBox {
-         position: absolute;
-         top:100px;
-         left: 0px;
-         width: 250px;
-         height: 500px;
+         width: 130px;
+         padding: 10px;
+         background: none repeat scroll 0 0 #aaa;
      }
-     #mainContent { position: absolute;
-     top: 120px;
-     left: 150px;
+     #mainContent { 
+         position: relative;
+         left: 173px;
+         top: -135px;
+         width: 85%;
      }
      
      <?php TableSet::print_css(); ?>
@@ -126,11 +80,11 @@ TableSet::set_default_css();
   <div id="navBox">
    <div class="boxlabel">Links</div>
    <ul>
-    <li><a href="<?php echo href_link(FILE_ORDERS); ?>">Orders</a></li>
-    <li><a href="<?php echo href_link(FILE_ITEMS); ?>">Items</a></li>
-    <li><a href="<?php echo href_link(FILE_SPECIALS); ?>">Specials</a></li>
-    <li><a href="<?php echo href_link(FILE_REPORTS); ?>">Reports</a></li>
-    <li><a href="<?php echo href_link(FILE_LOGIN, array('action' => 'logout') ); ?>">Log Out</a></li>
+    <li><a href="<?php echo href_link(FILENAME_ORDERS); ?>">Orders</a></li>
+    <li><a href="<?php echo href_link(FILENAME_ITEMS); ?>">Items</a></li>
+    <li><a href="<?php echo href_link(FILENAME_SPECIALS); ?>">Specials</a></li>
+    <li><a href="<?php echo href_link(FILENAME_REPORTS); ?>">Reports</a></li>
+    <li><a href="<?php echo href_link(FILENAME_LOGIN, array('action' => 'logout') ); ?>">Log Out</a></li>
    </ul>
   </div>
   <div id="mainContent">
