@@ -33,7 +33,9 @@ class HTMLWrap
      * Print a html select tag with the given values. 
      * 
      * @param string $name
-     * @param array $values
+     * @param array $values Associative array. Keys go into the option value 
+     * attribute. Array values are the text shown.
+     * 
      * @param string $label
      * @param mixed $selected
      * Pass a string to select a single value.
@@ -62,16 +64,18 @@ class HTMLWrap
 
         echo ' size="'. (int)$size . '">';
 
+//        die( print_r($values,true) . var_dump($selected));
+        
         foreach( $values as $key => $val )
         {
             $sel = '';
-            if($multiple && is_array($selected) && in_array($val, $selected))
+            if($multiple && is_array($selected) && in_array($key, $selected))
             {
-                $sel = ' selected';
+                $sel = ' selected="selected"';
             }
-            elseif( $val == $selected)
+            elseif( $key == $selected)
             {
-                $sel = ' selected';
+                $sel = ' selected="selected"';
             }
             echo '  <option value="'.$key.'"'.$sel.'>'.$val."</option>\n";
         }
@@ -125,7 +129,7 @@ class HTMLWrap
      */
     public function print_checkbox( $name, $value, $label, $selected = '')
     {
-        $chk = $value == $selected ? ' checked' : '';
+        $chk = $value == $selected ? ' checked="checked"' : '';
         echo '<input type="checkbox" name="'.$name.'" value="'.$value.'"'.$chk."/> $label";
     }
 }

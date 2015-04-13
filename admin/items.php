@@ -171,6 +171,7 @@ $ts->set_column_type(1, TableSet::TYPE_STRING);
 
 $ts->add_column('Special Price');
 $ts->set_column_type(7, TableSet::TYPE_REAL);
+$ts->set_column_width(7, '60px');
 
 if( ! $editItem)
     $ts->add_column('&nbsp;');
@@ -182,6 +183,8 @@ for($row=0,$n=$ts->get_num_rows(); $row < $n; $row++)
     $prom = $ts->get_value_at($row, 5);
     $prc = $ts->get_value_at($row, 6);
     
+    // Only display a special price.
+    if( $prom != 1)
     $ts->set_value_at($row, 7, $prom * $prc);
     
     if( ! $editItem)
@@ -211,7 +214,6 @@ if( isset($_GET['action']) && $_GET['action']=='create')
     $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
     
     $Item = new Item();
-//    $Item->init_by_key($_GET[IDSTR]);
         
     $HW->print_checkbox('enabled', 1, 'Enabled', $Item->enabled);
     echo "<br/>";
@@ -279,8 +281,6 @@ if(  $editItem )
     echo "</fieldset>\n</form>\n";
 }
 // done printing edit form.
-
-//echo '<pre>'. print_r($colnames,true).'</pre>';
 
 require './footer.php';
 

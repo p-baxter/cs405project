@@ -169,6 +169,7 @@ class Staff extends DBEntity
                 if($stmt->execute())
                 {
                     $this->keyValue = $this->mysqli->insert_id;
+                    $retval = true;
                 }
             }
             $stmt->close();
