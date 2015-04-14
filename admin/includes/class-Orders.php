@@ -34,6 +34,8 @@ class Orders extends DBEntity
     public $statusId = null;
     public $shipTo = null;
     
+    protected $items;
+    
     const SQL_COLUMN_LIST = " orderId, custId, dateOrdered, statusId, shipTo ";
     
     public function __construct( $id = null )
@@ -41,6 +43,72 @@ class Orders extends DBEntity
         parent::__construct($id);
         $this->tableName = '`Orders`';
         $this->keyName = 'orderId';
+        
+        $items = array();
+    }
+    
+    /**
+     * 
+     * @param OrderItem $Item Add or replace an item to this order.
+     */
+    public function set_item( $Item )
+    {
+        if( $Item->itemId != null )
+        {
+            // Set orderId for the OrderItem to be same as our orderId.
+            $Item->keyValue = $this->keyValue;
+            
+            // Add the item.
+            $this->items[ $Item->itemId ] = $Item;
+        }
+    }
+    
+    /**
+     * 
+     * @param int $itemId
+     * @return OrderItem
+     */
+    public function get_item($itemId)
+    {
+        if( isset($this->items[$itemId]))
+        {
+            return $this->items[$itemId];
+        }
+        return null;
+    }
+    
+    public function fetch_all_items()
+    {
+        $retval = false;
+        
+        if( $this->keyValue != null )
+        {
+            $stmt = $this->mysqli->prepare("SELECT itemId, price, qty FROM OrderItem WHERE orderId = ? ");
+            if( $stmt )
+            {
+                if( $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $this->keyValue))
+                {
+                    if( $stmt->execute())
+                    {
+                        $stmt->bind_result($itemId, $price, $qty);
+                        
+                        while( $stmt->fetch())
+                        {
+                            $OItem = new OrderItem($this->keyValue);
+                            $OItem->itemId = $itemId;
+                            $OItem->price = $price;
+                            $OItem->qty = $qty;
+                            
+                            $this->items[ $itemId ] = $OItem;
+                        }
+                        $retval = true;
+                    }
+                }
+                $stmt->close();
+            }
+        }
+        
+        return $retval;
     }
   
     /**
@@ -113,6 +181,14 @@ class Orders extends DBEntity
                 $stmt->close();
             }
             // end if stmt good.
+            
+            // Update each of the order item values.
+            // @TODO: what if the orderItem didn't already exist?
+            foreach($this->items as $itemId => $OItem )
+            {
+                $OItem->db_update();
+            }
+            
         }
         // end if not null.
         

@@ -35,11 +35,11 @@ require './includes/class-HtmlWrap.php';
 
 if( isset($_GET['action']) )
 {
-    die('not implemented yet');
-    
 //    die( print_r($_POST,true) . print_r($_GET,true));
     if( $_GET['action'] == 'update' && isset($_GET[IDSTR]) )
     {
+        die('not implemented yet');
+        
             // @TODO: verify manager  type.
 
         $Item = new Item();
@@ -249,30 +249,30 @@ if(  $editEntity )
     echo '<form action="'.  href_link(FILENAME_ORDERS, array('action' => 'update', IDSTR => $_GET[IDSTR])).'" method="POST">'."\n"
             ."<fieldset>\n";
     
-    $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
+//    $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
     
-    $Item = new Item();
-    $Item->init_by_key($_GET[IDSTR]);
+    $Order = new Order();
+    $Order->init_by_key($_GET[IDSTR]);
         
-    $HW->print_checkbox('enabled', 1, 'Enabled', $Item->enabled);
+    $HW->print_checkbox('enabled', 1, 'Enabled', $Order->enabled);
     echo "<br/>";
     
-    $HW->print_select('itype', $itypes, 'Item Type', $Item->itemType );
+    $HW->print_select('itype', $itypes, 'Item Type', $Order->itemType );
     echo "<br/>";
     
-    $HW->print_textbox('qty', $Item->qty_available, 'Qty Avail');
+    $HW->print_textbox('qty', $Order->qty_available, 'Qty Avail');
     echo "<br/>";
     
-    $HW->print_textbox('name', $Item->name, 'Name');
+    $HW->print_textbox('name', $Order->name, 'Name');
     echo "<br/>";
     
-    $HW->print_textbox('promo', $Item->promoRate, 'Promo Rate');
+    $HW->print_textbox('promo', $Order->promoRate, 'Promo Rate');
     echo "<br/>";
     
-    $HW->print_textbox('price', $Item->price, 'Price');
+    $HW->print_textbox('price', $Order->price, 'Price');
     echo "<br/>";
     
-    $HW->print_textbox('image', $Item->imageName, 'Image');
+    $HW->print_textbox('image', $Order->imageName, 'Image');
     echo "<br/>";
 
     echo '<br><input type="submit" value="Update" /> <a href="'.  href_link(FILENAME_ORDERS).'">Cancel</a>';
