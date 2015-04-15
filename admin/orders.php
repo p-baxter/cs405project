@@ -33,6 +33,8 @@ const IDSTR = 'oId';
 require './includes/application_top.php';
 require './includes/class-ItemType.php';
 require './includes/class-Item.php';
+require './includes/class-Customers.php';
+require './includes/class-OrderItem.php';
 require './includes/class-Orders.php';
 require './includes/class-HtmlWrap.php';
 

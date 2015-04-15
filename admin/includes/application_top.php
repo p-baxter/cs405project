@@ -35,12 +35,15 @@
 // then the path is /admin/, and not /admin/includes/, even though application_top
 // resides in includes/.
 
-require('./includes/constants.php');
-require(FS_ADMIN_BASE_DIR.DIR_INCLUDES. 'functions.php');
-require(FS_ADMIN_BASE_DIR.DIR_INCLUDES.'database.php');
+error_reporting( E_ALL );
+ini_set('display_errors', 1);
 
-require(FS_ADMIN_BASE_DIR.DIR_INCLUDES.'class-dbentity.php');
-require(FS_ADMIN_BASE_DIR.DIR_INCLUDES.'class-staff.php');
+require('./includes/constants.php');
+require('./includes/functions.php');
+require('./includes/database.php');
+
+require('./includes/class-dbentity.php');
+require('./includes/class-staff.php');
 
 // (Certain installations of PHP print warnings if default timezone is not set.)
 date_default_timezone_set(TIMEZONE_DEFAULT);

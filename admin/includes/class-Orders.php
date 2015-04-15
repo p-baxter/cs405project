@@ -7,6 +7,8 @@
  * This class is more than just a wrapper of table data: it also contains
  * OrderItem objects and a Customer object.
  * 
+ * The calling class needs to include the required classes.
+ * 
  * The MIT License
  *
  * Copyright 2015 matt.
@@ -30,15 +32,6 @@
  * THE SOFTWARE.
  */
 
-if(! class_exists('OrderItem'))
-{
-    require_once FS_ADMIN_BASE_DIR . DIR_INCLUDES.'class-OrderItem.php';
-}
-
-if( ! class_exists('Customers'))
-{
-    require_once FS_ADMIN_BASE_DIR . DIR_INCLUDES.'class-Customers.php';
-}
 
 class Orders extends DBEntity
 {    
