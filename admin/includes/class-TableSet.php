@@ -861,6 +861,7 @@ class TableSet
             $this->data[$row][$newColNo] = null;
         }
         
+        $this->column_types[$newColNo] = self::TYPE_STRING;
         $this->column_names[$newColNo] = $name;
     }
     // done add_column().
