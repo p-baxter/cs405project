@@ -1,6 +1,8 @@
 <?php
 
-/* 
+/*
+ * File: login.php
+ *  
  * The MIT License
  *
  * Copyright 2015 matt.
@@ -24,17 +26,8 @@
  * THE SOFTWARE.
  */
 
-require('./includes/constants.php');
-require('./includes/functions.php');
-require('./includes/database.php');
-
-require('./includes/class-dbentity.php');
-require('./includes/class-staff.php');
-
-// (Certain installations of PHP print warnings if default timezone is not set.)
-date_default_timezone_set(TIMEZONE_DEFAULT);
-
-session_start();
+define('SKIP_REDIRECT_NOT_LOGGED_IN', TRUE);
+require './includes/application_top.php';
 
 //
 // Detect if the user is already logged in.
@@ -114,45 +107,6 @@ if( isset($_GET['action']))
 // end if( isset($_GET['action'])).
 
 include './header.php';
-
-/*
-?>
-<!DOCTYPE html>
-<html>
- <head>
-  <title><?php echo STORE_NAME; ?></title>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <style type="text/css">
-     body{
-         margin: 10px;
-         background: none repeat scroll 0 0 white;
-     }
-     #header {
-
-     } 
-     #mainContent {
-         margin-top: 20px;
-     }
-     #mainContent form {
-         background: none repeat scroll 0 0 gray;
-         position: relative;
-         left: 40%;
-         text-align: right;
-         top: 100px;
-         width: 230px;
-         
-     }
-    </style>
- </head>
- <body>
-  <div id="header">
-   <img class="logo" width="100px" height="100px" src="<?php echo STORE_LOGO_IMG; ?>" />
-   <?php echo STORE_NAME; ?>
-  </div>
-  <div id="mainContent">
-<?php
-*/
 
 if( isset($_GET['action']) && $_GET['action'] == 'logout')
 {

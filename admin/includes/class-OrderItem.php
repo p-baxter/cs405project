@@ -42,7 +42,7 @@ class OrderItem extends DBEntity
     public function __construct( $orderId = null )
     {
         parent::__construct($orderId);
-        $this->tableName = '`OrderItem`';
+        $this->tableName = 'OrderItem';
         $this->keyName = 'orderId';
     }
   
@@ -57,32 +57,45 @@ class OrderItem extends DBEntity
      * Returns true if data was fetched.
      * Returns false if there was an error.
      * Returns null if no data was found.
+     * 
+     * @throws Exception
+     * Throws an exception if the database operations fail.
      */
     public function init_by_key($value)
     {
         $retval = false;
-        $stmt = $this->mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
+        $stmt = self::$mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
         
-        if( $stmt )
+        if( ! $stmt )
+            throw new Exception (self::$mysqli->error, self::$mysqli->errno );
+        
+        // Try to fetch the results; throw an exception on failure.
+        try
         {
-            if( $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value))
+            if( ! $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value) )
             {
-                if( $stmt->execute() )
-                {
-                    $stmt->bind_result($this->keyValue, 
+                throw new Exception('Failed to bind_param');
+            }
+            
+            if( ! $stmt->execute() )
+            {
+                throw new Exception('Failed to execute statement:' . self::$mysqli->error);
+            }
+            
+            $stmt->bind_result($this->keyValue, 
                             $this->custId,
                             $this->dateOrdered,
                             $this->statusId,
                             $this->shipTo  );
-                    $retval = $stmt->fetch();
-                }
-                // end if execute was good.
-            }
-            // end if bind succeeded.
+            $retval = $stmt->fetch();
+            
+        } catch (Exception $ex) {
             $stmt->close();
+            throw $ex;
         }
-        // end if stmt good.
-        
+        // end catch exception.
+        $stmt->close();
+                
         return $retval;
     }
     // end find_by_key().
@@ -99,7 +112,7 @@ class OrderItem extends DBEntity
         
         if( $this->getKeyValue() != null )
         {
-            $stmt = $this->mysqli->prepare("UPDATE ". $this->tableName." "
+            $stmt = self::$mysqli->prepare("UPDATE ". $this->tableName." "
                 . "SET price=?, qty=? "
                 . "WHERE orderId=? AND itemId=? ");
             
@@ -136,7 +149,7 @@ class OrderItem extends DBEntity
         
         if( $this->keyValue != null && $this->itemId != null )
         {
-            $stmt = $this->mysqli->prepare("INSERT INTO ".$this->tableName
+            $stmt = self::$mysqli->prepare("INSERT INTO ".$this->tableName
                 ." ( orderId, itemId, price, qty ) VALUES (?,?,?,? )");
 
             if($stmt)

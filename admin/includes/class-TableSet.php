@@ -82,6 +82,9 @@ class TableSet
     // Specify width value for the td tag. Not every index is set.
     protected $column_widths;
     
+    // Printf format for column output.
+    protected $column_formats;
+    
     /**
      * A two dimensional array of data. The outside array has rows, and the 
      * inside array has columns.
@@ -120,6 +123,13 @@ class TableSet
     public $footer;
     
     /**
+     * Add an additional class to the table tag; Then you can override the
+     * default colors when you use multiple TableSets on a page.
+     * @var string 
+     */
+    public $css_extra_class = null;
+    
+    /**
      * Flag. When true, a column with row numbers is output along with the
      * query results.
      *
@@ -154,6 +164,7 @@ class TableSet
         $this->column_types = array();
         $this->column_widths = array();
         $this->column_widths = array();
+        $this->column_formats = array();
         $this->show_row_numbers = true;
         
         $this->data = array();
@@ -510,7 +521,12 @@ class TableSet
      */
     public function print_table_html()
     {
-        echo '<table class="'.self::CSS_TABLE_CLASS.'">'."\n"
+        echo '<table class="'.self::CSS_TABLE_CLASS;
+        
+        if( $this->css_extra_class != null )
+            echo ' '.$this->css_extra_class;
+        
+        echo '">'."\n"
         . ($this->caption ? ' <caption>'.$this->caption.'</caption>' . "\n" : '')
         . " <thead><tr>\n";
 
@@ -572,7 +588,14 @@ class TableSet
 //                $outc = $this->output_order[$col];
                 
 //                echo '   <td class="'. $this->column_types[$outc] . '">'.$this->data[$row][$outc] . "</td>\n";
-                echo '   <td class="'. $this->column_types[$col] . '">'.$this->data[$row][$col] . "</td>\n";
+                
+                $outstr = $this->data[$row][$col];
+                if( isset($this->column_formats[$col]))
+                {
+                    $outstr = sprintf($this->column_formats[$col], $this->data[$row][$col]);
+                }
+                
+                echo '   <td class="'. $this->column_types[$col] . '">'.$outstr . "</td>\n";
             }
             // done printing each column in this row.
 
@@ -654,6 +677,25 @@ class TableSet
             return false;
         
         $this->column_types = $types;
+        return true;
+    }
+    
+    public function set_column_format($colNo, $format)
+    {
+        if( ! $this->column_exists($colNo))
+            return false;
+        
+        $this->column_formats[$colNo] = $format;
+        
+        return true;
+    }
+    
+    public function set_column_formats($formats)
+    {
+        if( !is_array($formats) || count($formats) != $this->num_cols)
+            return false;
+        
+        $this->column_formats = $formats;
         return true;
     }
     

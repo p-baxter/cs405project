@@ -1,8 +1,8 @@
 <?php
 /* 
- * class-staff.php
+ * class-Customers.php
  * 
- * Defines the Staff class.
+ * Defines the customers db entity class.
  * 
  * The MIT License
  *
@@ -27,46 +27,39 @@
  * THE SOFTWARE.
  */
 
-class Staff extends DBEntity
-{
-    public $name;
-    public $isManager;
-    public $password;
-    public $sessionId;
+class Customers extends DBEntity
+{    
+    public $name = null;
+    public $password = null;
+    public $sessionId = null;
     
-    const SQL_COLUMN_LIST = " staffId, name, isManager, password, sessionId ";
-    const COL_SESSIONID = 'sessionId';
+    const SQL_COLUMN_LIST = " custId, name, password, sessionId ";
     
-    public function __construct()
+    public function __construct( $id = null )
     {
-        parent::__construct();
-        $this->tableName = 'Staff';
-        $this->keyName = 'staffId';
-        
-        $this->name = null;
-        $this->isManager = null;
-        $this->password = null;
-        $this->sessionId = null;
+        parent::__construct($id);
+        $this->tableName = 'Customer';
+        $this->keyName = 'custId';
     }
-  
+    
     /**
      * Set the class member values by fetching values from the database.
      * If the key was not found, then the class member fields remain null.
      * 
      * @param string $value
-     * The sessionId to search the database for.
+     * The table key to search the database for.
      * 
      * @return mixed
      * Returns true if data was fetched.
      * Returns false if there was an error.
      * Returns null if no data was found.
+     * 
+     * @throws Exception
+     * Throws an exception if the database operations fail.
      */
     public function init_by_key($value)
     {
         $retval = false;
-        
-//        echo '<pre>'.var_dump(DBEntity::$mysqli).'</pre>';
-        
         $stmt = self::$mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
         
         if( ! $stmt )
@@ -85,7 +78,10 @@ class Staff extends DBEntity
                 throw new Exception('Failed to execute statement:' . self::$mysqli->error);
             }
             
-            $stmt->bind_result($this->keyValue, $this->name, $this->isManager, $this->password, $this->sessionId );
+            $stmt->bind_result($this->keyValue, 
+                    $this->name,
+                    $this->password,
+                    $this->sessionId );
             $retval = $stmt->fetch();
             
         } catch (Exception $ex) {
@@ -99,36 +95,6 @@ class Staff extends DBEntity
     }
     // end find_by_key().
     
-    
-    public function init_by_sessionId($sessid)
-    {
-        $retval = false;
-        $stmt = self::$mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST
-                . " FROM ".$this->tableName
-                . " WHERE ".self::COL_SESSIONID." = ?");
-        if( $stmt )
-        {
-            if( $stmt->bind_param(MYSQLI_BIND_TYPE_STRING, $sessid))
-            {
-                if( $stmt->execute() )
-                {        
-                    $stmt->bind_result($this->keyValue, $this->name,
-                            $this->isManager, $this->password, $this->sessionId );
-
-                    $stmt->fetch();
-                    $retval = true;
-                }
-                // end if execute was good.
-            }
-            // end if bind succeeded.
-            $stmt->close();
-        }
-        // end if stmt good.
-        
-        return $retval;
-    }
-    // end init_by_sessionId().
-    
     /**
      * Update a record matching this record's key with this class member's values.
      * 
@@ -141,19 +107,22 @@ class Staff extends DBEntity
         if( $this->getKeyValue() != null )
         {
             $stmt = self::$mysqli->prepare("UPDATE ". $this->tableName." "
-                . "SET name=?, isManager=?, password=?, ".self::COL_SESSIONID."=? "
+                . "SET name=?, password=?, sessionId=? "
                 . "WHERE ".$this->keyName."=?");
-
+            
             if($stmt)
             {
-                if( $stmt->bind_param("sissi", $this->name, $this->isManager,
-                        $this->password, $this->sessionId, $this->keyValue))
+                if( $stmt->bind_param("sssi",
+                        $this->name,
+                        $this->password,
+                        $this->sessionId,
+                        $this->keyValue))
                 {
                     $retval = $stmt->execute();
                 }
                 $stmt->close();
             }
-            // end if stmt good.
+            // end if stmt good.            
         }
         // end if not null.
         
@@ -162,9 +131,8 @@ class Staff extends DBEntity
     // end update_db().
     
     /**
-     * Inserts a new record into the database with the given values of name,
-     * isManager, password, and sessionId.
-     * The auto-incremented staffId is set to this->keyValue.
+     * Inserts a new record into the database with class member fields as values.
+     * The auto-incremented id is set to this->keyValue.
      * 
      * @return boolean
      */
@@ -172,12 +140,15 @@ class Staff extends DBEntity
     {
         $retval = false;
         
-        $stmt = self::$mysqli->prepare("INSERT INTO ".$this->tableName." (name, isManager, password, sessionId) "
-            . "VALUES (?,?,?,?)");
+        $stmt = self::$mysqli->prepare("INSERT INTO ".$this->tableName
+            ." ( name, password, sessionId ) VALUES (?,?,?)");
 
         if($stmt)
         {
-            if( $stmt->bind_param("sissi", $this->name, $this->isManager, $this->password, $this->sessionId ))
+            if( $stmt->bind_param("sss",
+                        $this->name,
+                        $this->password,
+                        $this->sessionId ))
             {
                 if($stmt->execute())
                 {
@@ -192,6 +163,5 @@ class Staff extends DBEntity
         return $retval;
     }
     // end db_insert().
-    
 }
 // end class Staff.

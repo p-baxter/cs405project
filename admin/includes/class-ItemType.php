@@ -57,24 +57,31 @@ class ItemType extends DBEntity
     public function init_by_key($value)
     {
         $retval = false;
-        $stmt = $this->mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
+        $stmt = self::$mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
         
-        if( $stmt )
+        // Try to fetch the results; throw an exception on failure.
+        try
         {
-            if( $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value))
+            if( ! $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value) )
             {
-                if( $stmt->execute() )
-                {
-                    $stmt->bind_result($this->keyValue, $this->name );
-                    $retval = $stmt->fetch();
-                }
-                // end if execute was good.
+                throw new Exception('Failed to bind_param');
             }
-            // end if bind succeeded.
+            
+            if( ! $stmt->execute() )
+            {
+                throw new Exception('Failed to execute statement:' . self::$mysqli->error);
+            }
+            
+            $stmt->bind_result($this->keyValue, $this->name );
+            $retval = $stmt->fetch();
+            
+        } catch (Exception $ex) {
             $stmt->close();
+            throw $ex;
         }
-        // end if stmt good.
-        
+        // end catch exception.
+        $stmt->close();
+                
         return $retval;
     }
     // end find_by_key().
@@ -90,7 +97,7 @@ class ItemType extends DBEntity
         
         if( $this->getKeyValue() != null )
         {
-            $stmt = $this->mysqli->prepare("UPDATE ". $this->tableName." "
+            $stmt = self::$mysqli->prepare("UPDATE ". $this->tableName." "
                 . "SET name=? "
                 . "WHERE ".$this->keyName."=?");
 
@@ -120,7 +127,7 @@ class ItemType extends DBEntity
     {
         $retval = false;
         
-        $stmt = $this->mysqli->prepare("INSERT INTO ".$this->tableName." (name)  VALUES (?)");
+        $stmt = self::$mysqli->prepare("INSERT INTO ".$this->tableName." (name)  VALUES (?)");
 
         if($stmt)
         {
@@ -128,7 +135,7 @@ class ItemType extends DBEntity
             {
                 if($stmt->execute())
                 {
-                    $this->keyValue = $this->mysqli->insert_id;
+                    $this->keyValue = self::$mysqli->insert_id;
                     $retval = true;
                 }
             }

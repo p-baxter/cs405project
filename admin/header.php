@@ -67,8 +67,15 @@ TableSet::set_default_css();
          width: 85%;
      }
      
-     <?php TableSet::print_css(); ?>
+     <?php
+     TableSet::print_css();
      
+     // Allow scripts that include us to add extra CSS in this block.
+     if( isset($headerAdditionalCss))
+     {
+         echo $headerAdditionalCss;
+     }
+     ?>
     </style>
     <script type="text/javascript"></script>
  </head>

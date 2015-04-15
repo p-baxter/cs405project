@@ -4,6 +4,9 @@
  * 
  * Defines the order db entity class.
  * 
+ * This class is more than just a wrapper of table data: it also contains
+ * OrderItem objects and a Customer object.
+ * 
  * The MIT License
  *
  * Copyright 2015 matt.
@@ -27,24 +30,56 @@
  * THE SOFTWARE.
  */
 
+if(! class_exists('OrderItem'))
+{
+    require_once FS_ADMIN_BASE_DIR . DIR_INCLUDES.'class-OrderItem.php';
+}
+
+if( ! class_exists('Customers'))
+{
+    require_once FS_ADMIN_BASE_DIR . DIR_INCLUDES.'class-Customers.php';
+}
+
 class Orders extends DBEntity
 {    
     public $custId = null;
-    public $dateOrdered = null;
     public $statusId = null;
     public $shipTo = null;
     
+    /**
+     *
+     * @var DateTime 
+     */
+    protected $dateOrdered = null;
+    
     protected $items;
     
+    protected $Customer = null;
+    
     const SQL_COLUMN_LIST = " orderId, custId, dateOrdered, statusId, shipTo ";
+    
+    // this is sloppy, but for now, this should be whatever the status id in
+    // the db for pending is.
+    const STATUS_ID_PENDING = 1;
+    const STATUS_ID_SHIPPED = 2;
     
     public function __construct( $id = null )
     {
         parent::__construct($id);
-        $this->tableName = '`Orders`';
+        $this->tableName = 'Orders';
         $this->keyName = 'orderId';
         
-        $items = array();
+        $this->items = array();
+    }
+    
+    /**
+     * Returns a DateTime object containing the date the order was placed.
+     * 
+     * @return DateTime
+     */
+    public function get_dateOrdered()
+    {
+        return $this->dateOrdered;
     }
     
     /**
@@ -77,13 +112,23 @@ class Orders extends DBEntity
         return null;
     }
     
-    public function fetch_all_items()
+    public function get_item_list()
+    {
+        return $this->items;
+    }
+    
+    /**
+     * Loads all OrderItems associated with this order into this->items.
+     * 
+     * @return boolean
+     */
+    public function load_all_items()
     {
         $retval = false;
         
         if( $this->keyValue != null )
         {
-            $stmt = $this->mysqli->prepare("SELECT itemId, price, qty FROM OrderItem WHERE orderId = ? ");
+            $stmt = self::$mysqli->prepare("SELECT itemId, price, qty FROM OrderItem WHERE orderId = ? ");
             if( $stmt )
             {
                 if( $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $this->keyValue))
@@ -115,10 +160,13 @@ class Orders extends DBEntity
      * Set the class member values by fetching values from the database.
      * If the key was not found, then the class member fields remain null.
      * 
+     * Also loads all order items into this->items, and loads customer into
+     * this->customer.
+     * 
      * @param string $value
      * The table key to search the database for.
      * 
-     * @return mixed
+     * @return boolean
      * Returns true if data was fetched.
      * Returns false if there was an error.
      * Returns null if no data was found.
@@ -126,27 +174,46 @@ class Orders extends DBEntity
     public function init_by_key($value)
     {
         $retval = false;
-        $stmt = $this->mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
+        $stmt = self::$mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST
+                . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
         
-        if( $stmt )
+        if( ! $stmt )
+            throw new Exception (self::$mysqli->error, self::$mysqli->errno );
+        
+        $dateOrdered_str = null;
+        // Try to fetch the results; throw an exception on failure.
+        try
         {
-            if( $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value))
+            if( ! $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value) )
             {
-                if( $stmt->execute() )
-                {
-                    $stmt->bind_result($this->keyValue, 
+                throw new Exception('Failed to bind_param');
+            }
+            
+            if( ! $stmt->execute() )
+            {
+                throw new Exception('Failed to execute statement:' . self::$mysqli->error);
+            }
+            
+            $stmt->bind_result($this->keyValue, 
                             $this->custId,
-                            $this->dateOrdered,
+                            $dateOrdered_str,
                             $this->statusId,
                             $this->shipTo  );
-                    $retval = $stmt->fetch();
-                }
-                // end if execute was good.
-            }
-            // end if bind succeeded.
+            $retval = $stmt->fetch();
+            
+        } catch (Exception $ex) {
             $stmt->close();
+            throw $ex;
         }
-        // end if stmt good.
+        // end catch exception.
+        $stmt->close();
+
+        $this->Customer = new Customers();
+        $this->Customer->init_by_key($value);
+
+        $this->dateOrdered = new DateTime($dateOrdered_str);
+        
+        $this->load_all_items();
         
         return $retval;
     }
@@ -154,6 +221,7 @@ class Orders extends DBEntity
     
     /**
      * Update a record matching this record's key with this class member's values.
+     * Note: changing an order's date is not supported now.
      * 
      * @return boolean
      */
@@ -163,15 +231,14 @@ class Orders extends DBEntity
         
         if( $this->getKeyValue() != null )
         {
-            $stmt = $this->mysqli->prepare("UPDATE ". $this->tableName." "
-                . "SET custId=?, dateOrdered=?, statusId=?, shipTo=? "
+            $stmt = self::$mysqli->prepare("UPDATE ". $this->tableName." "
+                . "SET custId=?, statusId=?, shipTo=? "
                 . "WHERE ".$this->keyName."=?");
             
             if($stmt)
             {
                 if( $stmt->bind_param("isisi",
                         $this->custId,
-                        $this->dateOrdered,
                         $this->statusId,
                         $this->shipTo,
                         $this->keyValue))
@@ -180,15 +247,7 @@ class Orders extends DBEntity
                 }
                 $stmt->close();
             }
-            // end if stmt good.
-            
-            // Update each of the order item values.
-            // @TODO: what if the orderItem didn't already exist?
-            foreach($this->items as $itemId => $OItem )
-            {
-                $OItem->db_update();
-            }
-            
+            // end if stmt good.            
         }
         // end if not null.
         
@@ -196,9 +255,20 @@ class Orders extends DBEntity
     }
     // end update_db().
     
+    public function db_update_items()
+    {
+        // Update each of the order item values.
+        // @TODO: what if the orderItem didn't already exist?
+        foreach($this->items as $OItem )
+        {
+            $OItem->db_update();
+        }
+    }
+    
     /**
      * Inserts a new record into the database with the given value of name.
      * The auto-incremented id is set to this->keyValue.
+     * The date of the order gets set to now().
      * 
      * @return boolean
      */
@@ -206,20 +276,19 @@ class Orders extends DBEntity
     {
         $retval = false;
         
-        $stmt = $this->mysqli->prepare("INSERT INTO ".$this->tableName
-            ." ( custId, dateOrdered, statusId, shipTo ) VALUES (?,?,?,? )");
+        $stmt = self::$mysqli->prepare("INSERT INTO ".$this->tableName
+            ." ( custId, dateOrdered, statusId, shipTo ) VALUES (?,now(),?,? )");
 
         if($stmt)
         {
             if( $stmt->bind_param("isis",
                         $this->custId,
-                        $this->dateOrdered,
                         $this->statusId,
                         $this->shipTo ))
             {
                 if($stmt->execute())
                 {
-                    $this->keyValue = $this->mysqli->insert_id;
+                    $this->keyValue = self::$mysqli->insert_id;
                     $retval = true;
                 }
             }
@@ -256,25 +325,20 @@ class Orders extends DBEntity
         }
         
         $retval = array();
-        $stmt = $this->mysqli->prepare("SELECT orderId, custId, dateOrdered, "
-                . "statusId, shipTo FROM Order " . $statusstr );
+        $stmt = self::$mysqli->prepare("SELECT orderId FROM Order " . $statusstr );
+
+        // Use an array because mysqli doesn't allow two concurrent open statements.
+        $orderIdList = array();
         
         if( $stmt )
         {
             if( $stmt->execute() )
             {
-                $stmt->bind_result($id, $custid, $date, $statusid, $shipto );
+                $stmt->bind_result($id );
                 
                 while( $stmt->fetch() )
                 {
-                    $Object = new Orders($id);
-
-                    $Object->custId = $custid;
-                    $Object->dateOrdered = $date;
-                    $Object->statusId = $statusid;
-                    $Object->shipTo = $shipto;
-
-                    $retval[] = $Object;
+                    $orderIdList[] = $id;
                 }
                 // done fetching rows.
             }
@@ -282,11 +346,52 @@ class Orders extends DBEntity
                 
             // end if bind succeeded.
             $stmt->close();
+            
+            foreach($orderIdList as $id)
+            {
+                $Object = new Orders();
+                $Object->init_by_key($id);
+
+                $retval[] = $Object;
+            }
         }
         // end if stmt good.
         
         return $retval;
     }
     // end fetch_all().
+    
+    /**
+     * Returns the customer object stored in this class.
+     * 
+     * @return Customer
+     */
+    public function get_customer()
+    {
+        return $this->Customer;
+    }
+    // end get_customer().
+    
+    public function shipIt()
+    {
+        if( $this->keyValue == null )
+            throw new Exception('OrderId is null');
+        
+        throw new Exception('Not implemented yet');
+        
+        /*
+         * If all the components are available, the status of the order changes
+         *  from "Pending" to "Shipped" and the quantities in the inventory are
+         *  decreased. If the components are not available, some error page
+         *  listing the missing components is generated and the order remains 
+         * "Pending".
+         */
+        
+        // Start a transaction.
+        // Load ordered quantities and available qtys.
+        //
+        
+    }
+    // end shipIt.
 }
 // end class Staff.

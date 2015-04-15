@@ -36,46 +36,63 @@
 // resides in includes/.
 
 require('./includes/constants.php');
-require('./includes/functions.php');
-require('./includes/database.php');
+require(FS_ADMIN_BASE_DIR.DIR_INCLUDES. 'functions.php');
+require(FS_ADMIN_BASE_DIR.DIR_INCLUDES.'database.php');
 
-require('./includes/class-dbentity.php');
-require('./includes/class-staff.php');
+require(FS_ADMIN_BASE_DIR.DIR_INCLUDES.'class-dbentity.php');
+require(FS_ADMIN_BASE_DIR.DIR_INCLUDES.'class-staff.php');
 
 // (Certain installations of PHP print warnings if default timezone is not set.)
 date_default_timezone_set(TIMEZONE_DEFAULT);
 
+// Set the static $mysqli object for all instances of DBEntity (and subclasses).
+DBEntity::setDatabase($mysqli);
+
+// Setup the cookie parameters: give an expiration time so that an admin
+// doesn't not remain logged in indefinitely. Use a path so that
+// our cookie applies only to our site.
+session_set_cookie_params(COOKIE_EXPIRES_SEC, '/'.DIR_ADMIN);
+
+// Send the cookie and session headers.
 session_start();
 
-//
-// Detect if the user is logged in.
-//
-
-// Fetch the desired URL before the redirect.
-$redirect_nice = '?page='.basename($_SERVER['SCRIPT_NAME']);
-
-// Redirect if session ID is not registered.
-// Note: the script stops running upon running http_redirect().
-if( ! isset($_SESSION[SESSION_ID_KEY]) )
+// Check if the script that included us wants us not to redirect a user to the
+// login page if that user is not logged in.
+// The login page should not redirect a user. Otherwise, they'd be in an
+// infinite redirect loop.
+if( ! defined('SKIP_REDIRECT_NOT_LOGGED_IN') || ! SKIP_REDIRECT_NOT_LOGGED_IN)
 {
-    http_redirect(FILENAME_LOGIN . $redirect_nice);
-}
+    //
+    // Detect if the user is logged in.
+    //
 
-// Search for a staff with the session ID.
-$staff = new Staff();
-if( ! $staff->init_by_sessionId($_SESSION[SESSION_ID_KEY]) )
-{
-    echo $mysqli->error;
-    exit();
-}
+    // Fetch the desired URL before the redirect.
+    $redirect_nice = '?page='.basename($_SERVER['SCRIPT_NAME']);
 
-// If the query failed to find a value, then unset the $_SESSION value and
-// redirect the user to the login page.
-if( $staff->getKeyValue() === null )
-{
-    unset($_SESSION[SESSION_ID_KEY]);
-    http_redirect(FILENAME_LOGIN . $redirect_nice );
+    // Redirect if session ID is not registered.
+    // Note: the script stops running upon running http_redirect().
+    if( ! isset($_SESSION[SESSION_ID_KEY]) )
+    {
+        http_redirect(FILENAME_LOGIN . $redirect_nice);
+    }
+
+    // Search for a staff with the session ID.
+    $staff = new Staff();
+    if( ! $staff->init_by_sessionId($_SESSION[SESSION_ID_KEY]) )
+    {
+        echo $mysqli->error;
+        exit();
+    }
+
+    // If the query failed to find a value, then unset the $_SESSION value and
+    // redirect the user to the login page.
+    if( $staff->getKeyValue() === null )
+    {
+        unset($_SESSION[SESSION_ID_KEY]);
+        http_redirect(FILENAME_LOGIN . $redirect_nice );
+    }
+    //
+    // done verifying that user is logged in.
+    //
 }
-//
-// done verifying that user is logged in.
-//
+// done checking if we should redirect.

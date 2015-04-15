@@ -32,8 +32,25 @@ define('SESSION_ID_KEY', 'sessID');
 define('STORE_NAME', 'Happy\'s Fun time Game and Toy Store');
 define('STORE_LOGO_IMG', 'logo.jpg');
 
+// The path of admin folder. This is used to set the cookie path, and it's
+// used in SITE_BASE_URL_ADMIN, which is used by http_href() function.
+// It's also used in FS_ADMIN_BASE_DIR.
+define('DIR_ADMIN', 'cs405/admin/');
+
+// Numer of seconds before a logged-in admin's cookie expires. 7200 = 2 hours.
+define('COOKIE_EXPIRES_SEC', 7200);
+
+// Used by http_href() function.
 define('SITE_BASE_URL', 'http://localhost/cs405/');
-define('SITE_BASE_URL_ADMIN', 'http://localhost/cs405/admin/');
+define('SITE_BASE_URL_ADMIN', 'http://localhost/'.DIR_ADMIN);
+
+// The base filesystem directory where the admin scripts exist.
+// this makes it easy to include files without needing to worry about which
+// directory the running script is located.
+// Note: each path string must have a trailing slash.
+define('FS_ADMIN_BASE_DIR', '/Library/WebServer/Documents/' . DIR_ADMIN);
+
+define('DIR_INCLUDES', 'includes/');
 
 define('DIR_IMAGES', 'images/');
 define('DIR_IMAGES_PRODUCTS', 'images/products/');
@@ -53,3 +70,7 @@ define('MYSQLI_BIND_TYPE_BLOB',   'b');
 define('TIMEZONE_DEFAULT', 'America/New_York');
 
 define('CRYPT_SALT', 'm1RMaNe!');
+
+//DATE
+define('DATE_ADMIN_ORDER_BRIEF', 'D Y-M-d g:i A');  // in the list of orders. 
+define('DATE_ADMIN_ORDER_DETAIL', 'D M d, Y g:i A');    // in the detail of an order.

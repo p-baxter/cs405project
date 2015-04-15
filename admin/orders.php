@@ -2,6 +2,9 @@
 /* 
  * File: orders.php
  * 
+ * @TODO: check if we need a foreign key constraint between OrderItem
+ * and Item.
+ * 
  * The MIT License
  *
  * Copyright 2015 matt.
@@ -30,68 +33,47 @@ const IDSTR = 'oId';
 require './includes/application_top.php';
 require './includes/class-ItemType.php';
 require './includes/class-Item.php';
+require './includes/class-Orders.php';
 require './includes/class-HtmlWrap.php';
 
+// @TODO: verify manager  type.
 
 if( isset($_GET['action']) )
 {
-//    die( print_r($_POST,true) . print_r($_GET,true));
-    if( $_GET['action'] == 'update' && isset($_GET[IDSTR]) )
+    if( $_GET['action'] == 'shipit' && isset($_GET[IDSTR]) )
     {
-        die('not implemented yet');
+        /*
+         * If all the components are available, the status of the order changes
+         *  from "Pending" to "Shipped" and the quantities in the inventory are
+         *  decreased. If the components are not available, some error page
+         *  listing the missing components is generated and the order remains 
+         * "Pending".
+         */
         
-            // @TODO: verify manager  type.
-
-        $Item = new Item();
-        $Item->init_by_key($_GET[IDSTR]);
-
-        // @TODO: if item not found, show error message and redirect.
-
-        if( ! isset($_POST['enabled'])) 
-            $Item->enabled = false;
-        else
-            $Item->enabled = true;
-
-        $Item->itemType = $_POST['itype'];
-        $Item->qty_available = $_POST['qty'];
-        $Item->name = $_POST['name'];
-        $Item->promoRate = $_POST['promo'];
-        $Item->price = $_POST['price'];
-        $Item->imageName = $_POST['image'];
-
-        $Item->db_update();
+        // Verify that all the items are available.
+        $Order = new Orders();
+        $Order->init_by_key($_GET[IDSTR]);
+     
+        echo '<pre>';
+        $Order->shipIt();
 
         // @TODO: show any errors.
+        
+        
 
         // Redirct back to items.php.
-        http_redirect(FILENAME_ORDERS);
-    }
-    else if( $_GET['action'] == 'insert' )
-    {
-        $Item = new Item();
-
-        if( ! isset($_POST['enabled'])) 
-            $Item->enabled = false;
-        else
-            $Item->enabled = true;
-
-        $Item->itemType = $_POST['itype'];
-        $Item->qty_available = $_POST['qty'];
-        $Item->name = $_POST['name'];
-        $Item->promoRate = $_POST['promo'];
-        $Item->price = $_POST['price'];
-        $Item->imageName = $_POST['image'];
-
-//        var_dump($Item->db_insert());
-
-        // @TODO: show any errors.
-
-        // Redirct back to items.php.
-        http_redirect(FILENAME_ORDERS);
+//        http_redirect(FILENAME_ORDERS);
+        
         exit;
     }
 }
 
+$headerAdditionalCss = <<<ENDCSS
+ p.shipTo { background-color: white; } 
+        
+ table.tableset.items th { background-color: yellowgreen;}
+ table.tableset.items { background-color: #ddd;}
+ENDCSS;
 require './header.php';
 
 //$mysqli = new mysqli();
@@ -246,36 +228,71 @@ if(  $editEntity )
 {
     $HW = new HTMLWrap();
     
-    echo '<form action="'.  href_link(FILENAME_ORDERS, array('action' => 'update', IDSTR => $_GET[IDSTR])).'" method="POST">'."\n"
+    echo '<form action="'.  href_link(FILENAME_ORDERS, array('action' => 'shipit', IDSTR => $_GET[IDSTR])).'" method="POST">'."\n"
             ."<fieldset>\n";
     
 //    $itypes = ItemType::fetch_all($mysqli, ItemType::RESULT_ASSOC_ARRAY);
     
-    $Order = new Order();
-    $Order->init_by_key($_GET[IDSTR]);
+    $Orders = new Orders();
+    $Orders->init_by_key($_GET[IDSTR]);
+    
+    echo '<p>Order#: ' . $Orders->getKeyValue() . "</p>\n";
+    
+    $Date = $Orders->get_dateOrdered();
+    
+    echo '<p>Customer Name: ' . $Orders->get_customer()->name . "<br/>\n"
+            .'Date: ' . $Date->format(DATE_ADMIN_ORDER_DETAIL) . "</p>\n";
+    
+    echo '<p class="shipTo">ShipTo: <br/>' . $Orders->shipTo. "</p>\n";
+    
+    
+    $ItemTS = new TableSet();
+    $ItemTS->css_extra_class = 'items';
+    $ItemTS->show_row_numbers(false);
+  
+    
+    $columnNames = array('Item ID','Name','Price','Qty Ordered','SubTotal','Qty Available');
+    $columnTypes = array(TableSet::TYPE_INT, TableSet::TYPE_STRING,
+        TableSet::TYPE_REAL, TableSet::TYPE_INT, TableSet::TYPE_REAL,
+        TableSet::TYPE_INT);
+    
+    $data = array();
+    
+    $itemList = $Orders->get_item_list();
+    foreach( $itemList as $id => $OrderItem )
+    {
+        $Item = new Item();
+        $Item->init_by_key($id);
         
-    $HW->print_checkbox('enabled', 1, 'Enabled', $Order->enabled);
-    echo "<br/>";
+        $row = array();
+        $row[0] = $id;
+        $row[1] = $Item->name;
+        $row[2] = $OrderItem->price;
+        $row[3] = $OrderItem->qty;
+        
+        $row[4] = $OrderItem->price * $OrderItem->qty;
+        
+        
+        
+        $row[5] = $Item->qty_available;
+        
+        $data[] = $row;
+    }
+    // done creating item table data.
     
-    $HW->print_select('itype', $itypes, 'Item Type', $Order->itemType );
-    echo "<br/>";
+    $ItemTS->set_data($data);
     
-    $HW->print_textbox('qty', $Order->qty_available, 'Qty Avail');
-    echo "<br/>";
+    $ItemTS->set_column_names($columnNames);
+    $ItemTS->set_column_types($columnTypes);
+    $ItemTS->set_column_format(2, '$%0.2f');
+    $ItemTS->set_column_format(4, '$%0.2f');
+    $ItemTS->footer = null;
     
-    $HW->print_textbox('name', $Order->name, 'Name');
-    echo "<br/>";
+    $ItemTS->print_table_html();
     
-    $HW->print_textbox('promo', $Order->promoRate, 'Promo Rate');
-    echo "<br/>";
-    
-    $HW->print_textbox('price', $Order->price, 'Price');
-    echo "<br/>";
-    
-    $HW->print_textbox('image', $Order->imageName, 'Image');
-    echo "<br/>";
-
-    echo '<br><input type="submit" value="Update" /> <a href="'.  href_link(FILENAME_ORDERS).'">Cancel</a>';
+//    echo '<pre>' . print_r($Orders,true) . "</pre>\n";
+      
+    echo '<br><input type="submit" value="SHIP IT" /> <a href="'.  href_link(FILENAME_ORDERS).'">Cancel</a>';
     echo "</fieldset>\n</form>\n";
 }
 // done printing edit form.

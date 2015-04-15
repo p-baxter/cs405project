@@ -35,10 +35,12 @@ abstract class DBEntity
     
     /**
      * The mysqli connection object.
+     * This is static so that there is only one reference to it amongst
+     * all the subclasses.
      *
      * @var mysqli
      */
-    protected $mysqli;
+    static public $mysqli;
     
     /**
      * The name of the table.
@@ -90,12 +92,10 @@ abstract class DBEntity
     /**
      * 
      * @param int $id Use to set this keyValue in the constructor.
-     * @global mysqli $mysqli
+     * 
      */
     public function __construct($id = null)
     {
-        global $mysqli;
-        $this->mysqli = $mysqli;
         if( $id != null )
         {
             $this->keyValue = $id;
@@ -123,10 +123,10 @@ abstract class DBEntity
      * 
      * @param mysqli $mysqli
      */
-    public function setDatabase($mysqli)
+    static public function setDatabase($mysqli)
     {
-        if(is_a($mysqli, 'mysql'))
-            $this->mysqli = $mysqli;
+        if(is_a($mysqli, 'mysqli'))
+            DBEntity::$mysqli = $mysqli;
     }
     
     /**
@@ -165,7 +165,7 @@ abstract class DBEntity
 //            
 //            
 //            
-//            $stmt = $this->mysqli->prepare();
+//            $stmt = self::$mysqli->prepare();
 //            
 //            
 ////                . "SET name=?, isManager=?, password=?, ".self::COL_SESSIONID."=? "

@@ -61,19 +61,31 @@ class Item extends DBEntity
      * Returns true if data was fetched.
      * Returns false if there was an error.
      * Returns null if no data was found.
+     * 
+     * @throws Exception
      */
     public function init_by_key($value)
     {
         $retval = false;
-        $stmt = $this->mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
+        $stmt = self::$mysqli->prepare("SELECT " . self::SQL_COLUMN_LIST . "FROM ".$this->tableName." WHERE ".$this->keyName." = ? ");
         
-        if( $stmt )
+        if( ! $stmt )
+            throw new Exception (self::$mysqli->error, self::$mysqli->errno );
+        
+        // Try to fetch the results; throw an exception on failure.
+        try
         {
-            if( $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value))
+            if( ! $stmt->bind_param(MYSQLI_BIND_TYPE_INT, $value) )
             {
-                if( $stmt->execute() )
-                {
-                    $stmt->bind_result($this->keyValue, 
+                throw new Exception('Failed to bind_param');
+            }
+            
+            if( ! $stmt->execute() )
+            {
+                throw new Exception('Failed to execute statement:' . self::$mysqli->error);
+            }
+            
+            $stmt->bind_result($this->keyValue, 
                             $this->enabled,
                             $this->itemType,
                             $this->qty_available,
@@ -81,15 +93,15 @@ class Item extends DBEntity
                             $this->promoRate,
                             $this->price,
                             $this->imageName );
-                    $retval = $stmt->fetch();
-                }
-                // end if execute was good.
-            }
-            // end if bind succeeded.
+            $retval = $stmt->fetch();
+            
+        } catch (Exception $ex) {
             $stmt->close();
+            throw $ex;
         }
-        // end if stmt good.
-        
+        // end catch exception.
+        $stmt->close();
+                
         return $retval;
     }
     // end find_by_key().
@@ -105,7 +117,7 @@ class Item extends DBEntity
         
         if( $this->getKeyValue() != null )
         {
-            $stmt = $this->mysqli->prepare("UPDATE ". $this->tableName." "
+            $stmt = self::$mysqli->prepare("UPDATE ". $this->tableName." "
                 . "SET enabled=?, itemType=?, qty_available=?, name=?, promoRate=?, price=?, imageName=? "
                 . "WHERE ".$this->keyName."=?");
             
@@ -143,7 +155,7 @@ class Item extends DBEntity
     {
         $retval = false;
         
-        $stmt = $this->mysqli->prepare("INSERT INTO ".$this->tableName
+        $stmt = self::$mysqli->prepare("INSERT INTO ".$this->tableName
             ." ( enabled, itemType, qty_available, name, promoRate, price,"
             . " imageName ) VALUES (?,?,?,?,?,?,?)");
 
@@ -160,7 +172,7 @@ class Item extends DBEntity
             {
                 if($stmt->execute())
                 {
-                    $this->keyValue = $this->mysqli->insert_id;
+                    $this->keyValue = self::$mysqli->insert_id;
                     $retval = true;
                 }
             }
@@ -175,7 +187,7 @@ class Item extends DBEntity
     public static function fetch_all()
     {
         $retval = array();
-        $stmt = $this->mysqli->prepare("SELECT itemId, enabled, itemType,"
+        $stmt = self::$mysqli->prepare("SELECT itemId, enabled, itemType,"
                 . " qty_available, name, promoRate, price, imageName"
                 . " FROM Item ");
         
